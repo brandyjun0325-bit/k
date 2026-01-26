@@ -1,496 +1,729 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>학생 과제 관리 시스템 - 폴더 편집 버전</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
-        body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: #f8fafc;
-        }
-        .status-submitted { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .status-pending { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
-        .status-missing { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-        
-        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>출결·지각 자동 체크 (QR/카메라)</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #111a2e;
+      --muted: #7f8aa3;
+      --text: #e8eefc;
+      --accent: #4aa3ff;
+      --good: #39d98a;
+      --warn: #ffb020;
+      --bad: #ff5c5c;
+      --line: rgba(255,255,255,.08);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(74,163,255,.18), transparent 60%),
+                  radial-gradient(900px 700px at 80% 20%, rgba(57,217,138,.12), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      padding: 20px;
+    }
+    header {
+      max-width: 1100px;
+      margin: 0 auto 14px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0;
+      letter-spacing: -0.3px;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 6px;
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 980px) {
+      .wrap { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: 0 12px 28px rgba(0,0,0,.35);
+      backdrop-filter: blur(8px);
+    }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .col { display: flex; flex-direction: column; gap: 10px; }
+    label { font-size: 12px; color: var(--muted); }
+    input, select, textarea, button {
+      font: inherit;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      outline: none;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    button {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(74,163,255,.16);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform .06s ease, background .2s ease;
+    }
+    button:hover { background: rgba(74,163,255,.22); }
+    button:active { transform: translateY(1px); }
+    button.secondary { background: rgba(255,255,255,.06); }
+    button.danger { background: rgba(255,92,92,.16); }
+    button.good { background: rgba(57,217,138,.14); }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.22);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .pill strong { color: var(--text); font-weight: 600; }
 
-        .sticky-col { position: sticky; left: 0; z-index: 20; background-color: white; border-right: 2px solid #e2e8f0; }
-        
-        .sidebar-transition { transition: all 0.3s ease; }
-        .folder-item.active { background-color: #1e293b; color: white; border-left: 4px solid #3b82f6; }
-        
-        .folder-actions { display: none; }
-        .folder-item:hover .folder-actions { display: flex; }
-    </style>
+    .videoBox {
+      position: relative;
+      overflow: hidden;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.35);
+    }
+    video, canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+    .scanFrame {
+      width: min(70%, 280px);
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
+      border: 2px dashed rgba(255,255,255,.35);
+      box-shadow: 0 0 0 999px rgba(0,0,0,.25);
+    }
+    .status {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.22);
+      font-size: 13px;
+    }
+    .status .ok { color: var(--good); }
+    .status .warn { color: var(--warn); }
+    .status .bad { color: var(--bad); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+    }
+    th, td {
+      padding: 10px 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+      vertical-align: top;
+    }
+    th { color: var(--muted); font-weight: 600; text-align: left; background: rgba(0,0,0,.18); }
+    tr:last-child td { border-bottom: none; }
+    .tag {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      display: inline-block;
+    }
+    .tag.good { color: var(--good); }
+    .tag.warn { color: var(--warn); }
+    .tag.bad { color: var(--bad); }
+    .small { font-size: 12px; color: var(--muted); }
+    .hr { height: 1px; background: var(--line); margin: 10px 0; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 520px) { .grid2 { grid-template-columns: 1fr; } }
+  </style>
 </head>
-<body class="flex min-h-screen text-slate-900">
-
-    <!-- 사이드바 -->
-    <aside class="w-64 bg-slate-900 text-slate-300 flex-shrink-0 hidden md:flex flex-col sidebar-transition">
-        <div class="p-6 border-b border-slate-800">
-            <h1 class="text-xl font-bold text-white flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                과제 매니저
-            </h1>
-        </div>
-        
-        <nav class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
-            <!-- 폴더 리스트 영역 -->
-            <div>
-                <div class="flex justify-between items-center px-4 mb-2">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">과제 폴더</p>
-                    <button onclick="openFolderModal()" title="새 폴더 추가" class="text-blue-400 hover:text-blue-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    </button>
-                </div>
-                <div id="folderList" class="space-y-1">
-                    <!-- Dynamic Folder List -->
-                </div>
-            </div>
-        </nav>
-
-        <!-- 사이드바 하단 설정 영역 -->
-        <div class="p-4 border-t border-slate-800 space-y-2">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 mb-1">시스템 설정</p>
-            <button onclick="toggleStudentModal(true)" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 hover:text-white transition-all text-sm font-medium">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-                학생 명단 관리
-            </button>
-            <div class="bg-slate-800/50 p-4 rounded-xl mt-2">
-                <p class="text-[10px] text-slate-500">Status Tip</p>
-                <div class="flex items-center gap-2 mt-2 text-[10px]">
-                    <span class="w-2 h-2 rounded-full bg-green-500"></span> 제출
-                    <span class="w-2 h-2 rounded-full bg-red-500 ml-1"></span> 누락
-                    <span class="w-2 h-2 rounded-full bg-slate-500 ml-1"></span> 대기
-                </div>
-            </div>
-        </div>
-    </aside>
-
-    <!-- 메인 컨텐츠 -->
-    <main class="flex-1 h-screen overflow-y-auto custom-scrollbar">
-        <!-- 모바일 헤더 -->
-        <header class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center">
-            <h1 class="font-bold">과제 매니저</h1>
-            <div class="flex gap-2">
-                <button onclick="toggleStudentModal(true)" class="p-2 bg-slate-800 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-                </button>
-                <button onclick="openFolderModal()" class="p-2 bg-slate-800 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                </button>
-            </div>
-        </header>
-
-        <div class="p-4 md:p-8 max-w-6xl mx-auto">
-            <div class="mb-8 flex flex-col md:flex-row md:justify-between md:items-end gap-4">
-                <div>
-                    <h2 id="currentFolderNameDisplay" class="text-2xl font-bold text-slate-800">모든 폴더</h2>
-                    <p class="text-slate-500">선택된 폴더 내의 과제 현황을 관리합니다.</p>
-                </div>
-                <div class="flex gap-2">
-                     <button onclick="openAssignmentModal()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 shadow-lg shadow-blue-500/20 flex items-center gap-2 transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        현재 폴더에 과제 추가
-                    </button>
-                </div>
-            </div>
-
-            <!-- 메트릭스 섹션 -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
-                <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                    <h3 class="font-bold text-slate-800 text-sm">과제 이행 매트릭스</h3>
-                </div>
-                <div class="overflow-x-auto custom-scrollbar">
-                    <table class="w-full border-collapse">
-                        <thead>
-                            <tr id="matrixHeader" class="bg-slate-50/50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
-                                <!-- Dynamic -->
-                            </tr>
-                        </thead>
-                        <tbody id="matrixBody">
-                            <!-- Dynamic -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- 하단 상세 섹션 -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                        <h3 id="detailTitle" class="font-bold text-slate-800 text-sm">과제 상세 내역</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-white border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase">
-                                    <th class="px-6 py-4">성명</th>
-                                    <th class="px-6 py-4">상태</th>
-                                    <th class="px-6 py-4">점수</th>
-                                    <th class="px-6 py-4">피드백</th>
-                                </tr>
-                            </thead>
-                            <tbody id="detailTableBody">
-                                <!-- Dynamic -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- 분석 요약 -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">과제 선택 분석</h4>
-                    <select id="assignmentSelector" onchange="selectAssignment(this.value)" class="w-full p-2 mb-4 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500">
-                        <!-- Dynamic -->
-                    </select>
-                    
-                    <div class="flex items-end gap-2 mb-2">
-                        <span id="statRate" class="text-4xl font-bold text-blue-600">0%</span>
-                        <span id="statCount" class="text-slate-400 text-sm mb-1">(0/0명)</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-6">
-                        <div id="statProgressBar" class="bg-blue-600 h-full transition-all duration-500" style="width: 0%"></div>
-                    </div>
-
-                    <h5 class="text-xs font-bold text-red-500 uppercase tracking-widest mb-2">미제출 명단</h5>
-                    <div id="missingList" class="flex flex-wrap gap-2 text-[11px]">
-                        <!-- Dynamic -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- 모달: 학생 관리 -->
-    <div id="studentModal" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 font-bold">학생 명단 관리</div>
-            <div class="p-6 space-y-4">
-                <textarea id="studentInputArea" rows="8" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="줄바꿈으로 이름 구분"></textarea>
-                <div class="flex gap-3">
-                    <button onclick="toggleStudentModal(false)" class="flex-1 py-3 border rounded-xl text-sm font-bold">취소</button>
-                    <button onclick="saveStudents()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold">저장</button>
-                </div>
-            </div>
-        </div>
+<body>
+  <header>
+    <div>
+      <h1>출결·지각 자동 체크 (QR + 교사용 카메라) — 프로토타입</h1>
+      <div class="sub">※ 실제 “AI 얼굴인식”은 학교/개인정보 정책과 별도 모델·서버가 필요합니다. 이 페이지는 <b>QR 스캔 기반</b>으로 안전하게 동작하는 데모입니다.</div>
     </div>
-
-    <!-- 모달: 폴더 추가 -->
-    <div id="folderModal" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 font-bold">새 폴더 생성</div>
-            <div class="p-6 space-y-4">
-                <input type="text" id="newFolderTitle" class="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="폴더 이름 (예: 1학기 수학)">
-                <div class="flex gap-3">
-                    <button onclick="closeFolderModal()" class="flex-1 py-3 border rounded-xl text-sm font-bold">취소</button>
-                    <button onclick="addFolder()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold">생성</button>
-                </div>
-            </div>
-        </div>
+    <div class="row">
+      <span class="pill">오늘: <strong id="today"></strong></span>
+      <span class="pill">총 인원: <strong id="countTotal">0</strong></span>
+      <span class="pill">출석: <strong id="countPresent">0</strong></span>
+      <span class="pill">지각: <strong id="countTardy">0</strong></span>
+      <span class="pill">결석: <strong id="countAbsent">0</strong></span>
     </div>
+  </header>
 
-    <!-- 모달: 과제 추가 -->
-    <div id="assignmentModal" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 font-bold">새 과제 추가</div>
-            <div class="p-6 space-y-4">
-                <p class="text-xs text-slate-500">선택된 폴더: <span id="targetFolderName" class="font-bold text-blue-600">폴더명</span></p>
-                <input type="text" id="newAssignmentTitle" class="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="과제 제목">
-                <div class="flex gap-3">
-                    <button onclick="closeAssignmentModal()" class="flex-1 py-3 border rounded-xl text-sm font-bold">취소</button>
-                    <button onclick="addAssignment()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold">과제 생성</button>
-                </div>
-            </div>
+  <div class="wrap">
+    <!-- LEFT: Scanner & Controls -->
+    <section class="card">
+      <div class="col">
+        <div class="videoBox">
+          <video id="video" playsinline muted></video>
+          <canvas id="canvas" hidden></canvas>
+          <div class="overlay"><div class="scanFrame"></div></div>
         </div>
-    </div>
 
-    <script>
-        // --- 데이터 구조 ---
-        let students = ["김민수", "이서연", "박준영", "최지아", "정윤호"];
-        let folders = [
-            { id: 101, title: "1학기 과제" },
-            { id: 102, title: "프로젝트" }
-        ];
-        let assignments = [
-            { id: 1, folderId: 101, title: "수학 익힘책 10p", data: {} },
-            { id: 2, folderId: 101, title: "단어 테스트", data: {} },
-            { id: 3, folderId: 102, title: "최종 결과물 제출", data: {} }
-        ];
-        
-        let currentFolderId = 101; 
-        let currentAssignmentId = null; 
-        let editingFolderId = null; // 현재 편집 중인 폴더 ID
+        <div class="row">
+          <button id="btnStart" class="good">카메라 시작</button>
+          <button id="btnStop" class="secondary">카메라 중지</button>
+          <button id="btnFlip" class="secondary">카메라 전환</button>
+        </div>
 
-        // --- 초기화 ---
-        function init() {
-            renderFolders();
-            refreshView();
+        <div class="grid2">
+          <div>
+            <label>수업 시작 시각 (지각 기준)</label>
+            <input id="startTime" type="time" value="09:00" />
+          </div>
+          <div>
+            <label>지각 허용(분)</label>
+            <input id="tardyGrace" type="number" value="5" min="0" max="120" />
+          </div>
+        </div>
+
+        <div>
+          <label>수동 입력(학생 QR에 들어있는 값) — 예: 2026-6-02|1234|홍길동</label>
+          <div class="row">
+            <input id="manualCode" placeholder="QR 내용 붙여넣기" />
+            <button id="btnManual">등록</button>
+          </div>
+          <div class="small">권장 QR 포맷: <b>학생번호</b> 또는 <b>학생ID</b> (개인정보 최소화). 이름은 교사 명단에서 매칭.</div>
+        </div>
+
+        <div class="status" id="status">상태: <span class="warn">대기 중</span></div>
+
+        <div class="hr"></div>
+
+        <div>
+          <label>학급 명단 입력 (한 줄에 1명: 학생ID,이름) — 예: 1234,홍길동</label>
+          <textarea id="rosterInput" placeholder="1234,홍길동
+1235,김영희
+..."></textarea>
+          <div class="row">
+            <button id="btnSaveRoster" class="good">명단 저장</button>
+            <button id="btnResetDay" class="secondary">오늘 기록 초기화</button>
+            <button id="btnClearAll" class="danger">전체 데이터 삭제</button>
+          </div>
+          <div class="small">명단/기록은 브라우저 <b>로컬 저장소(localStorage)</b>에만 저장됩니다(서버 전송 없음).</div>
+        </div>
+
+        <div>
+          <label>내보내기</label>
+          <div class="row">
+            <button id="btnExportCsv">CSV 다운로드</button>
+            <button id="btnPrint" class="secondary">인쇄</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Attendance Table -->
+    <section class="card">
+      <div class="row" style="justify-content: space-between;">
+        <div>
+          <div style="font-size:14px; font-weight:700;">출결 현황</div>
+          <div class="small">스캔 즉시 기록됩니다. 동일 학생 재스캔은 “마지막 시간”만 갱신됩니다.</div>
+        </div>
+        <div class="row">
+          <select id="filter">
+            <option value="all">전체</option>
+            <option value="present">출석</option>
+            <option value="tardy">지각</option>
+            <option value="absent">미기록(결석)</option>
+          </select>
+          <input id="search" placeholder="이름/ID 검색" style="width:200px" />
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div style="overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="min-width:120px;">학생ID</th>
+              <th style="min-width:120px;">이름</th>
+              <th style="min-width:110px;">상태</th>
+              <th style="min-width:160px;">기록 시각</th>
+              <th>메모</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="small">
+        <b>QR 제작 팁</b>
+        <ul>
+          <li>학생용 QR에 <b>학생ID</b>만 넣어도 충분합니다. 예: <code>1234</code></li>
+          <li>명단은 교사가 미리 저장 → 스캔 시 이름 자동 매칭</li>
+          <li>개인정보 최소화를 위해 이름/학년/반은 QR에 넣지 않는 것을 권장합니다.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- QR decoder library -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script>
+    // ===== Storage keys =====
+    const KEY_ROSTER = "vibe_attendance_roster_v1";
+    const KEY_LOGS_PREFIX = "vibe_attendance_logs_"; // + YYYY-MM-DD
+
+    // ===== DOM =====
+    const $ = (id) => document.getElementById(id);
+    const video = $("video");
+    const canvas = $("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+    const statusEl = $("status");
+    const tbody = $("tbody");
+
+    // ===== State =====
+    let stream = null;
+    let facingMode = "environment";
+    let scanning = false;
+    let rafId = null;
+
+    function fmtDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function fmtTime(d) {
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      const ss = String(d.getSeconds()).padStart(2, "0");
+      return `${hh}:${mm}:${ss}`;
+    }
+
+    const todayStr = fmtDate(new Date());
+    $("today").textContent = todayStr;
+
+    function getRoster() {
+      try {
+        const raw = localStorage.getItem(KEY_ROSTER);
+        return raw ? JSON.parse(raw) : {}; // { id: name }
+      } catch { return {}; }
+    }
+
+    function setRoster(rosterObj) {
+      localStorage.setItem(KEY_ROSTER, JSON.stringify(rosterObj));
+    }
+
+    function getLogsKey(dateStr) {
+      return KEY_LOGS_PREFIX + dateStr;
+    }
+
+    function getLogs(dateStr = todayStr) {
+      try {
+        const raw = localStorage.getItem(getLogsKey(dateStr));
+        return raw ? JSON.parse(raw) : {}; // { id: { status, time, memo } }
+      } catch { return {}; }
+    }
+
+    function setLogs(logsObj, dateStr = todayStr) {
+      localStorage.setItem(getLogsKey(dateStr), JSON.stringify(logsObj));
+    }
+
+    function computeStatus(now = new Date()) {
+      // Determine present vs tardy based on startTime + grace
+      const start = $("startTime").value || "09:00";
+      const graceMin = Math.max(0, parseInt($("tardyGrace").value || "0", 10));
+
+      const [sh, sm] = start.split(":").map(n => parseInt(n, 10));
+      const startDt = new Date(now);
+      startDt.setHours(sh, sm, 0, 0);
+
+      const lateAfter = new Date(startDt.getTime() + graceMin * 60 * 1000);
+      return now > lateAfter ? "tardy" : "present";
+    }
+
+    function labelFor(status) {
+      if (status === "present") return { text: "출석", cls: "good" };
+      if (status === "tardy") return { text: "지각", cls: "warn" };
+      return { text: "미기록", cls: "bad" };
+    }
+
+    function parseQrPayload(payload) {
+      // Accept formats:
+      // 1) "1234" (id only)
+      // 2) "YYYY-MM-DD|1234|홍길동" (we'll prefer id)
+      // 3) JSON {"id":"1234"}
+      const p = String(payload || "").trim();
+      if (!p) return null;
+
+      // JSON
+      if (p.startsWith("{") && p.endsWith("}")) {
+        try {
+          const obj = JSON.parse(p);
+          const id = (obj.id || obj.studentId || "").toString().trim();
+          return id ? { id } : null;
+        } catch {}
+      }
+
+      // pipe format
+      if (p.includes("|")) {
+        const parts = p.split("|");
+        // find something that looks like id (digits/letters)
+        const id = (parts[1] ?? parts[0] ?? "").toString().trim();
+        return id ? { id } : null;
+      }
+
+      // id only
+      return { id: p };
+    }
+
+    function setStatus(html) {
+      statusEl.innerHTML = "상태: " + html;
+    }
+
+    function beep() {
+      // subtle confirmation beep (no external assets)
+      try {
+        const ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctxAudio.createOscillator();
+        const g = ctxAudio.createGain();
+        o.type = "sine";
+        o.frequency.value = 880;
+        g.gain.value = 0.04;
+        o.connect(g);
+        g.connect(ctxAudio.destination);
+        o.start();
+        setTimeout(() => { o.stop(); ctxAudio.close(); }, 120);
+      } catch {}
+    }
+
+    function upsertAttendanceById(id) {
+      const roster = getRoster();
+      const logs = getLogs();
+      const now = new Date();
+
+      const st = computeStatus(now);
+      const name = roster[id] || "(명단 미등록)";
+
+      logs[id] = {
+        status: st,
+        time: `${todayStr} ${fmtTime(now)}`,
+        memo: logs[id]?.memo || ""
+      };
+
+      setLogs(logs);
+      render();
+
+      const tag = labelFor(st);
+      setStatus(`<span class="ok">기록 완료</span> — ${id} / ${name} : <span class="${tag.cls}">${tag.text}</span> (${fmtTime(now)})`);
+      beep();
+    }
+
+    function render() {
+      const roster = getRoster();
+      const logs = getLogs();
+      const filter = $("filter").value;
+      const q = ($("search").value || "").trim().toLowerCase();
+
+      // build full list from roster keys, ensuring even absent shows
+      const ids = Object.keys(roster);
+      // also include ids that appear in logs but not in roster
+      Object.keys(logs).forEach(id => { if (!ids.includes(id)) ids.push(id); });
+
+      // counts
+      let present = 0, tardy = 0, absent = 0;
+      ids.forEach(id => {
+        const st = logs[id]?.status;
+        if (st === "present") present++;
+        else if (st === "tardy") tardy++;
+        else absent++;
+      });
+
+      $("countTotal").textContent = String(ids.length);
+      $("countPresent").textContent = String(present);
+      $("countTardy").textContent = String(tardy);
+      $("countAbsent").textContent = String(absent);
+
+      // rows
+      const rows = [];
+      ids.sort((a,b) => a.localeCompare(b, "ko"));
+      for (const id of ids) {
+        const name = roster[id] || "(명단 미등록)";
+        const st = logs[id]?.status || "absent";
+        const time = logs[id]?.time || "-";
+        const memo = logs[id]?.memo || "";
+
+        if (filter !== "all") {
+          if (filter === "absent" && st !== "absent") continue;
+          if (filter === "present" && st !== "present") continue;
+          if (filter === "tardy" && st !== "tardy") continue;
         }
 
-        // --- 뷰 갱신 ---
-        function refreshView() {
-            const currentFolder = folders.find(f => f.id === currentFolderId);
-            document.getElementById('currentFolderNameDisplay').innerText = currentFolder ? currentFolder.title : "선택된 폴더 없음";
-            
-            const filteredAssignments = assignments.filter(a => a.folderId === currentFolderId);
-            
-            if (filteredAssignments.length > 0) {
-                if (!currentAssignmentId || !filteredAssignments.find(a => a.id === currentAssignmentId)) {
-                    currentAssignmentId = filteredAssignments[0].id;
-                }
-            } else {
-                currentAssignmentId = null;
-            }
-
-            renderMatrix(filteredAssignments);
-            renderSelectors(filteredAssignments);
-            updateAnalysis();
-            renderDetailTable();
+        if (q) {
+          const hay = `${id} ${name}`.toLowerCase();
+          if (!hay.includes(q)) continue;
         }
 
-        // --- 렌더링 함수들 ---
-        function renderFolders() {
-            const list = document.getElementById('folderList');
-            list.innerHTML = folders.map(f => {
-                const isActive = f.id === currentFolderId;
-                const isEditing = f.id === editingFolderId;
-                
-                if (isEditing) {
-                    return `
-                        <div class="px-2 py-1">
-                            <input id="editInput_${f.id}" type="text" value="${f.title}" class="w-full bg-slate-800 text-white text-sm px-3 py-2 rounded-lg outline-none ring-2 ring-blue-500" onkeydown="if(event.key==='Enter') saveFolderName(${f.id})">
-                            <div class="flex gap-1 mt-1 justify-end">
-                                <button onclick="setEditingFolder(null)" class="p-1 text-[10px] text-slate-500 hover:text-white">취소</button>
-                                <button onclick="saveFolderName(${f.id})" class="p-1 text-[10px] text-blue-400 hover:text-blue-300">저장</button>
-                            </div>
-                        </div>
-                    `;
-                }
+        const tag = labelFor(st);
+        rows.push(`
+          <tr>
+            <td><b>${escapeHtml(id)}</b></td>
+            <td>${escapeHtml(name)}</td>
+            <td><span class="tag ${tag.cls}">${tag.text}</span></td>
+            <td>${escapeHtml(time)}</td>
+            <td>
+              <input data-memo-id="${escapeAttr(id)}" value="${escapeAttr(memo)}" placeholder="메모(예: 병원, 조퇴 예정)" />
+            </td>
+          </tr>
+        `);
+      }
 
-                return `
-                    <div class="folder-item group relative w-full flex items-center rounded-xl transition-all text-sm font-medium ${isActive ? 'active' : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'}">
-                        <button onclick="selectFolder(${f.id})" class="flex-1 flex items-center gap-2 px-4 py-2.5 text-left">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                            <span class="truncate">${f.title}</span>
-                        </button>
-                        <div class="folder-actions absolute right-2 flex items-center gap-1 bg-slate-900 px-1 py-0.5 rounded shadow-sm">
-                            <button onclick="setEditingFolder(${f.id})" class="p-1 text-slate-500 hover:text-blue-400 transition-colors" title="이름 수정">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            </button>
-                            <button onclick="deleteFolder(${f.id})" class="p-1 text-slate-500 hover:text-red-400 transition-colors" title="폴더 삭제">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+      tbody.innerHTML = rows.join("");
+
+      // bind memo inputs
+      tbody.querySelectorAll("input[data-memo-id]").forEach(inp => {
+        inp.addEventListener("change", (e) => {
+          const id = e.target.getAttribute("data-memo-id");
+          const logs2 = getLogs();
+          if (!logs2[id]) logs2[id] = { status: "absent", time: "-", memo: "" };
+          logs2[id].memo = e.target.value;
+          setLogs(logs2);
+        });
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[c]));
+    }
+    function escapeAttr(s) { return escapeHtml(s).replace(/\n/g, " "); }
+
+    async function startCamera() {
+      if (stream) return;
+      try {
+        setStatus('<span class="warn">카메라 연결 중...</span>');
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode },
+          audio: false
+        });
+        video.srcObject = stream;
+        await video.play();
+        scanning = true;
+        scanLoop();
+        setStatus('<span class="ok">스캔 준비 완료</span> — 학생 QR을 화면 중앙에 맞춰 주세요.');
+      } catch (err) {
+        console.error(err);
+        setStatus('<span class="bad">카메라 접근 실패</span> — 브라우저 권한을 확인해 주세요.');
+        stream = null;
+      }
+    }
+
+    function stopCamera() {
+      scanning = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      video.srcObject = null;
+      setStatus('<span class="warn">대기 중</span>');
+    }
+
+    async function flipCamera() {
+      facingMode = (facingMode === "environment") ? "user" : "environment";
+      stopCamera();
+      await startCamera();
+    }
+
+    let lastHit = { value: "", ts: 0 };
+
+    function scanLoop() {
+      if (!scanning || !video.videoWidth) {
+        rafId = requestAnimationFrame(scanLoop);
+        return;
+      }
+
+      const w = video.videoWidth;
+      const h = video.videoHeight;
+      canvas.width = w;
+      canvas.height = h;
+      ctx.drawImage(video, 0, 0, w, h);
+      const imageData = ctx.getImageData(0, 0, w, h);
+      const code = jsQR(imageData.data, w, h, { inversionAttempts: "dontInvert" });
+
+      if (code && code.data) {
+        const payload = String(code.data).trim();
+        const now = Date.now();
+        // debounce same code
+        if (payload !== lastHit.value || (now - lastHit.ts) > 2000) {
+          lastHit = { value: payload, ts: now };
+          const parsed = parseQrPayload(payload);
+          if (parsed?.id) {
+            upsertAttendanceById(parsed.id);
+          } else {
+            setStatus('<span class="bad">QR 인식은 됐지만</span> 학생ID 파싱 실패');
+          }
         }
+      }
 
-        // --- 폴더 관리 로직 ---
-        function setEditingFolder(id) {
-            editingFolderId = id;
-            renderFolders();
-            if(id) setTimeout(() => document.getElementById(`editInput_${id}`).focus(), 50);
-        }
+      rafId = requestAnimationFrame(scanLoop);
+    }
 
-        function saveFolderName(id) {
-            const input = document.getElementById(`editInput_${id}`);
-            const newTitle = input.value.trim();
-            if (newTitle) {
-                const folder = folders.find(f => f.id === id);
-                if (folder) folder.title = newTitle;
-            }
-            editingFolderId = null;
-            renderFolders();
-            refreshView();
-        }
+    function saveRosterFromTextarea() {
+      const lines = $("rosterInput").value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      const roster = {};
+      for (const line of lines) {
+        const [id, name] = line.split(",").map(s => (s || "").trim());
+        if (!id) continue;
+        roster[id] = name || "";
+      }
+      setRoster(roster);
+      render();
+      setStatus('<span class="ok">명단 저장 완료</span>');
+    }
 
-        function deleteFolder(id) {
-            if (!confirm("이 폴더와 포함된 모든 과제 데이터가 삭제됩니다. 계속하시겠습니까?")) return;
-            
-            folders = folders.filter(f => f.id !== id);
-            assignments = assignments.filter(a => a.folderId !== id);
-            
-            if (currentFolderId === id) {
-                currentFolderId = folders.length > 0 ? folders[0].id : null;
-            }
-            
-            renderFolders();
-            refreshView();
-        }
+    function loadRosterToTextarea() {
+      const roster = getRoster();
+      const lines = Object.keys(roster).sort((a,b)=>a.localeCompare(b,"ko")).map(id => `${id},${roster[id]}`);
+      $("rosterInput").value = lines.join("\n");
+    }
 
-        // --- 기존 매트릭스/상세 테이블 렌더링 (동일) ---
-        function renderMatrix(filtered) {
-            const header = document.getElementById('matrixHeader');
-            const body = document.getElementById('matrixBody');
-            
-            let headerHTML = `<th class="px-6 py-3 text-left sticky-col bg-slate-50 min-w-[100px]">학생 명단</th>`;
-            filtered.forEach(a => {
-                headerHTML += `<th class="px-3 py-3 text-center min-w-[90px] border-l border-slate-100">${a.title}</th>`;
-            });
-            header.innerHTML = headerHTML;
+    function resetToday() {
+      localStorage.removeItem(getLogsKey(todayStr));
+      render();
+      setStatus('<span class="ok">오늘 기록을 초기화</span>했습니다.');
+    }
 
-            body.innerHTML = '';
-            students.forEach(student => {
-                const tr = document.createElement('tr');
-                tr.className = "border-b border-slate-50 hover:bg-slate-50/50";
-                
-                let cellsHTML = `<td class="px-6 py-3 font-bold text-xs text-slate-700 sticky-col bg-white">${student}</td>`;
-                filtered.forEach(a => {
-                    const status = a.data[student]?.status || 'pending';
-                    const colorClass = status === 'submitted' ? 'status-submitted' : (status === 'missing' ? 'status-missing' : 'status-pending');
-                    const icon = status === 'submitted' ? '✓' : (status === 'missing' ? '✕' : '-');
-                    cellsHTML += `
-                        <td class="p-1 border-l border-slate-50">
-                            <div onclick="cycleStatus('${student}', ${a.id})" class="h-8 flex items-center justify-center rounded-lg text-[10px] font-bold cursor-pointer transition-all active:scale-90 ${colorClass}">
-                                ${icon}
-                            </div>
-                        </td>`;
-                });
-                tr.innerHTML = cellsHTML;
-                body.appendChild(tr);
-            });
-        }
+    function clearAll() {
+      if (!confirm("명단과 모든 출결 기록을 삭제할까요?")) return;
+      localStorage.removeItem(KEY_ROSTER);
+      // delete logs keys
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith(KEY_LOGS_PREFIX)) localStorage.removeItem(k);
+      });
+      loadRosterToTextarea();
+      render();
+      setStatus('<span class="ok">전체 데이터 삭제 완료</span>');
+    }
 
-        function renderSelectors(filtered) {
-            const selector = document.getElementById('assignmentSelector');
-            if (filtered.length === 0) {
-                selector.innerHTML = '<option>과제 없음</option>';
-                return;
-            }
-            selector.innerHTML = filtered.map(a => `<option value="${a.id}" ${a.id === currentAssignmentId ? 'selected' : ''}>${a.title}</option>`).join('');
-        }
+    function exportCsv() {
+      const roster = getRoster();
+      const logs = getLogs();
+      const ids = Object.keys(roster);
+      Object.keys(logs).forEach(id => { if (!ids.includes(id)) ids.push(id); });
+      ids.sort((a,b)=>a.localeCompare(b,"ko"));
 
-        function renderDetailTable() {
-            const body = document.getElementById('detailTableBody');
-            const a = assignments.find(x => x.id === currentAssignmentId);
-            body.innerHTML = '';
-            
-            if (!a) {
-                body.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-400 text-sm">표시할 과제가 없습니다.</td></tr>';
-                return;
-            }
+      const header = ["date","student_id","name","status","time","memo"].join(",");
+      const rows = [header];
+      for (const id of ids) {
+        const name = roster[id] || "";
+        const st = logs[id]?.status || "absent";
+        const time = logs[id]?.time || "";
+        const memo = logs[id]?.memo || "";
+        rows.push([
+          todayStr,
+          csvCell(id),
+          csvCell(name),
+          st,
+          csvCell(time),
+          csvCell(memo)
+        ].join(","));
+      }
 
-            students.forEach(student => {
-                const d = a.data[student] || { status: 'pending', score: 0, feedback: '' };
-                const tr = document.createElement('tr');
-                tr.className = "border-b border-slate-50 text-xs";
-                tr.innerHTML = `
-                    <td class="px-6 py-3 font-bold text-slate-700">${student}</td>
-                    <td class="px-6 py-3">
-                        <select onchange="updateData('${student}', 'status', this.value)" class="text-[10px] font-bold px-2 py-1 rounded-lg outline-none ${d.status === 'submitted' ? 'bg-green-100 text-green-700' : (d.status === 'missing' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600')}">
-                            <option value="submitted" ${d.status === 'submitted' ? 'selected' : ''}>완료</option>
-                            <option value="pending" ${d.status === 'pending' ? 'selected' : ''}>대기</option>
-                            <option value="missing" ${d.status === 'missing' ? 'selected' : ''}>미제출</option>
-                        </select>
-                    </td>
-                    <td class="px-6 py-3">
-                        <input type="number" value="${d.score || 0}" onchange="updateData('${student}', 'score', this.value)" class="w-12 p-1 border rounded text-center outline-none">
-                    </td>
-                    <td class="px-6 py-3">
-                        <input type="text" value="${d.feedback || ''}" onchange="updateData('${student}', 'feedback', this.value)" placeholder="피드백" class="w-full bg-slate-50 px-2 py-1 rounded outline-none text-[10px]">
-                    </td>
-                `;
-                body.appendChild(tr);
-            });
-        }
+      const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `attendance_${todayStr}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setStatus('<span class="ok">CSV 다운로드</span>가 시작되었습니다.');
+    }
 
-        function selectFolder(id) {
-            currentFolderId = id;
-            currentAssignmentId = null;
-            renderFolders();
-            refreshView();
-        }
+    function csvCell(v) {
+      const s = String(v ?? "");
+      if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    }
 
-        function selectAssignment(id) {
-            currentAssignmentId = parseInt(id);
-            updateAnalysis();
-            renderDetailTable();
-            const a = assignments.find(x => x.id === currentAssignmentId);
-            if(a) document.getElementById('detailTitle').innerText = `[${a.title}] 상세 내역`;
-        }
+    // ===== Events =====
+    $("btnStart").addEventListener("click", startCamera);
+    $("btnStop").addEventListener("click", stopCamera);
+    $("btnFlip").addEventListener("click", flipCamera);
 
-        function cycleStatus(student, aid) {
-            const a = assignments.find(x => x.id === aid);
-            if (!a.data[student]) a.data[student] = { status: 'pending', score: 0, feedback: '' };
-            const cur = a.data[student].status;
-            a.data[student].status = cur === 'pending' ? 'submitted' : (cur === 'submitted' ? 'missing' : 'pending');
-            refreshView();
-        }
+    $("btnManual").addEventListener("click", () => {
+      const code = $("manualCode").value;
+      const parsed = parseQrPayload(code);
+      if (!parsed?.id) {
+        setStatus('<span class="bad">수동 입력 실패</span> — 학생ID를 확인해 주세요.');
+        return;
+      }
+      upsertAttendanceById(parsed.id);
+      $("manualCode").value = "";
+    });
 
-        function updateData(s, f, v) {
-            const a = assignments.find(x => x.id === currentAssignmentId);
-            if (!a.data[s]) a.data[s] = { status: 'pending', score: 0, feedback: '' };
-            a.data[s][f] = f === 'score' ? parseInt(v) : v;
-            if (f === 'status') refreshView();
-        }
+    $("btnSaveRoster").addEventListener("click", saveRosterFromTextarea);
+    $("btnResetDay").addEventListener("click", resetToday);
+    $("btnClearAll").addEventListener("click", clearAll);
 
-        function updateAnalysis() {
-            const a = assignments.find(x => x.id === currentAssignmentId);
-            if (!a) {
-                document.getElementById('statRate').innerText = '0%';
-                document.getElementById('statCount').innerText = '(0/0명)';
-                document.getElementById('statProgressBar').style.width = '0%';
-                document.getElementById('missingList').innerHTML = '';
-                return;
-            }
-            let sub = 0, mis = [];
-            students.forEach(s => {
-                const stat = a.data[s]?.status || 'pending';
-                if (stat === 'submitted') sub++;
-                if (stat === 'missing') mis.push(s);
-            });
-            const rate = students.length > 0 ? Math.round((sub / students.length) * 100) : 0;
-            document.getElementById('statRate').innerText = `${rate}%`;
-            document.getElementById('statCount').innerText = `(${sub}/${students.length}명)`;
-            document.getElementById('statProgressBar').style.width = `${rate}%`;
-            document.getElementById('missingList').innerHTML = mis.length > 0 
-                ? mis.map(s => `<span class="px-2 py-1 bg-red-50 text-red-600 border border-red-100 rounded">${s}</span>`).join('')
-                : '<span class="text-slate-400 italic">없음</span>';
-        }
+    $("btnExportCsv").addEventListener("click", exportCsv);
+    $("btnPrint").addEventListener("click", () => window.print());
 
-        // --- 모달 제어 ---
-        function toggleStudentModal(s) { document.getElementById('studentModal').classList.toggle('hidden', !s); if(s) document.getElementById('studentInputArea').value = students.join('\n'); }
-        function saveStudents() { students = document.getElementById('studentInputArea').value.split('\n').map(s => s.trim()).filter(s => s.length > 0); refreshView(); toggleStudentModal(false); }
-        
-        function openFolderModal() { document.getElementById('folderModal').classList.remove('hidden'); }
-        function closeFolderModal() { document.getElementById('folderModal').classList.add('hidden'); }
-        function addFolder() {
-            const t = document.getElementById('newFolderTitle').value.trim();
-            if (!t) return;
-            const id = Date.now();
-            folders.push({ id, title: t });
-            document.getElementById('newFolderTitle').value = '';
-            closeFolderModal();
-            selectFolder(id);
-        }
+    $("filter").addEventListener("change", render);
+    $("search").addEventListener("input", render);
+    $("startTime").addEventListener("change", render);
+    $("tardyGrace").addEventListener("change", render);
 
-        function openAssignmentModal() {
-            const folder = folders.find(f => f.id === currentFolderId);
-            if (!folder) return alert("폴더를 먼저 선택해주세요.");
-            document.getElementById('targetFolderName').innerText = folder.title;
-            document.getElementById('assignmentModal').classList.remove('hidden');
-        }
-        function closeAssignmentModal() { document.getElementById('assignmentModal').classList.add('hidden'); }
-        function addAssignment() {
-            const t = document.getElementById('newAssignmentTitle').value.trim();
-            if (!t) return;
-            const id = Date.now();
-            assignments.push({ id, folderId: currentFolderId, title: t, data: {} });
-            document.getElementById('newAssignmentTitle').value = '';
-            closeAssignmentModal();
-            currentAssignmentId = id;
-            renderFolders();
-            refreshView();
-        }
+    // ===== Init =====
+    loadRosterToTextarea();
+    render();
 
-        window.onload = init;
-    </script>
+    // Stop camera on tab close
+    window.addEventListener("beforeunload", () => stopCamera());
+  </script>
 </body>
 </html>
