@@ -1,244 +1,149 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>수업 설계 파트너 - Before Class</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
-        body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: #f8fafc;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>수업 설계 파트너 - 자동 설계 데모</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
+    body { font-family: 'Pretendard', sans-serif; background: #f8fafc; }
+  </style>
 </head>
 <body class="text-slate-900">
-    <header class="bg-slate-900 text-white">
-        <div class="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-blue-500/20 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v12"></path><path d="M6 12h12"></path><path d="M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"></path></svg>
-                </div>
-                <div>
-                    <p class="text-xs text-blue-200">Before Class</p>
-                    <h1 class="text-lg font-bold">수업 설계 파트너</h1>
-                </div>
-            </div>
-            <a href="#free-trial" class="hidden sm:inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full text-sm font-semibold hover:bg-white/20 transition">
-                무료 체험 시작
-            </a>
+  <header class="bg-slate-900 text-white">
+    <div class="max-w-6xl mx-auto px-6 py-10">
+      <p class="text-xs uppercase tracking-[0.35em] text-blue-200">Before Class</p>
+      <h1 class="mt-2 text-3xl sm:text-4xl font-bold">과목과 수업 내용만 입력하면, 수업 설계가 자동 완성됩니다.</h1>
+      <p class="mt-4 text-slate-200 max-w-3xl">차시 설계(도입·전개·정리), 수준별 자료, 활동 아이디어, 에듀테크 연계 자료를 한 번에 생성하는 수업 설계 파트너 데모입니다.</p>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+    <section class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+      <h2 class="text-xl font-bold">수업 정보 입력</h2>
+      <p class="text-sm text-slate-500 mt-1">아래 항목을 넣으면 자동으로 수업안을 생성합니다.</p>
+
+      <form id="plannerForm" class="mt-6 space-y-4">
+        <div>
+          <label for="subject" class="block text-sm font-semibold">과목</label>
+          <input id="subject" name="subject" required placeholder="예: 사회" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-400" />
         </div>
-        <div class="max-w-6xl mx-auto px-6 pb-12 pt-6 grid gap-8 lg:grid-cols-[1.2fr_0.8fr] items-center">
-            <div>
-                <p class="text-sm uppercase tracking-[0.4em] text-blue-200">수업 준비의 새로운 기준</p>
-                <h2 class="text-3xl sm:text-4xl font-bold mt-3 leading-tight">
-                    성취기준 입력 한 번으로 <br class="hidden sm:block">도입–전개–정리 수업안이 완성됩니다.
-                </h2>
-                <p class="text-slate-200 mt-4 max-w-xl">
-                    수업 설계 파트너는 차시 설계, 수준별 자료, 활동 아이디어, 에듀테크 연계를 자동화해
-                    교사의 수업 준비 시간을 획기적으로 줄입니다.
-                </p>
-                <div class="mt-6 flex flex-wrap gap-3">
-                    <a href="#free-trial" class="bg-blue-500 px-5 py-3 rounded-xl text-sm font-semibold shadow-lg shadow-blue-500/30 hover:bg-blue-400 transition">데모 보기</a>
-                    <button class="border border-white/30 px-5 py-3 rounded-xl text-sm font-semibold hover:bg-white/10 transition">기능 살펴보기</button>
-                </div>
-                <div class="mt-6 flex flex-wrap gap-6 text-sm text-slate-200">
-                    <div>
-                        <p class="text-2xl font-bold text-white">70%</p>
-                        <p class="text-xs uppercase tracking-widest">준비 시간 절감</p>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-white">3단계</p>
-                        <p class="text-xs uppercase tracking-widest">수준별 자료 자동 분화</p>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-white">4in1</p>
-                        <p class="text-xs uppercase tracking-widest">아이디어 묶음 제공</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white/10 border border-white/10 rounded-3xl p-6 shadow-xl">
-                <div class="bg-white/10 rounded-2xl p-4">
-                    <p class="text-xs text-blue-200">오늘의 자동 생성 결과</p>
-                    <h3 class="text-lg font-semibold mt-2">[사회] 도시와 농촌 비교</h3>
-                    <div class="mt-4 space-y-3 text-sm">
-                        <div class="bg-slate-900/60 rounded-xl p-3">
-                            <p class="text-xs text-blue-200">도입</p>
-                            <p>사진 비교 퀴즈로 학습 목표 공유</p>
-                        </div>
-                        <div class="bg-slate-900/60 rounded-xl p-3">
-                            <p class="text-xs text-blue-200">전개</p>
-                            <p>모둠별 그래프 해석 + 토의 질문 제공</p>
-                        </div>
-                        <div class="bg-slate-900/60 rounded-xl p-3">
-                            <p class="text-xs text-blue-200">정리</p>
-                            <p>디지털 워크시트 자동 채점 요약</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4 text-xs text-slate-200">* 교과·학년·성취기준 기반으로 즉시 생성</div>
-            </div>
+        <div>
+          <label for="lessonTopic" class="block text-sm font-semibold">수업 내용</label>
+          <textarea id="lessonTopic" name="lessonTopic" rows="3" required placeholder="예: 도시와 농촌의 생활 모습 비교" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-400"></textarea>
         </div>
-    </header>
-
-    <main class="max-w-6xl mx-auto px-6 py-16 space-y-16">
-        <section class="grid gap-8 lg:grid-cols-2">
-            <div>
-                <p class="text-xs uppercase tracking-[0.3em] text-blue-500">핵심 기능</p>
-                <h3 class="text-2xl font-bold mt-2">수업 설계를 자동화하는 4가지 엔진</h3>
-                <p class="text-slate-500 mt-3">
-                    반복 업무는 자동화하고, 교사는 학생 상호작용에 집중할 수 있도록 설계했습니다.
-                </p>
-            </div>
-            <div class="grid gap-4">
-                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-                    <h4 class="font-semibold">차시 설계 자동화</h4>
-                    <p class="text-sm text-slate-500 mt-2">성취기준 입력 시 도입–전개–정리 구조로 수업안 초안을 생성합니다.</p>
-                </div>
-                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-                    <h4 class="font-semibold">수준별 자료 생성</h4>
-                    <p class="text-sm text-slate-500 mt-2">동일 주제를 기초·보통·심화 버전으로 자동 분화하여 맞춤형 제공.</p>
-                </div>
-                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-                    <h4 class="font-semibold">활동 아이디어 뱅크</h4>
-                    <p class="text-sm text-slate-500 mt-2">토의 질문, 프로젝트 주제, 게임형 활동을 한 번에 제안합니다.</p>
-                </div>
-                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-                    <h4 class="font-semibold">에듀테크 연계</h4>
-                    <p class="text-sm text-slate-500 mt-2">퀴즈, 시뮬레이션, 디지털 워크시트까지 자동 생성합니다.</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div>
-                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">작동 방식</p>
-                    <h3 class="text-2xl font-bold mt-2">3단계로 끝나는 수업 준비</h3>
-                </div>
-                <button class="bg-slate-900 text-white px-4 py-2 rounded-full text-sm font-semibold">워크플로우 보기</button>
-            </div>
-            <div class="mt-8 grid gap-6 md:grid-cols-3">
-                <div class="bg-slate-50 rounded-2xl p-5">
-                    <p class="text-xs text-blue-600 font-semibold">Step 1</p>
-                    <h4 class="font-semibold mt-2">성취기준 입력</h4>
-                    <p class="text-sm text-slate-500 mt-2">교과, 학년, 핵심 키워드를 입력하면 즉시 분석합니다.</p>
-                </div>
-                <div class="bg-slate-50 rounded-2xl p-5">
-                    <p class="text-xs text-blue-600 font-semibold">Step 2</p>
-                    <h4 class="font-semibold mt-2">자동 설계</h4>
-                    <p class="text-sm text-slate-500 mt-2">수업안, 활동, 평가, 에듀테크 자료를 동시에 생성합니다.</p>
-                </div>
-                <div class="bg-slate-50 rounded-2xl p-5">
-                    <p class="text-xs text-blue-600 font-semibold">Step 3</p>
-                    <h4 class="font-semibold mt-2">개별화 조정</h4>
-                    <p class="text-sm text-slate-500 mt-2">학생 수준에 맞게 난이도와 자료를 맞춤 편집합니다.</p>
-                </div>
-            </div>
-        </section>
-
-
-
-        <section id="free-trial" class="bg-slate-900 text-white rounded-3xl p-8 md:p-10 shadow-xl">
-            <div class="grid gap-8 lg:grid-cols-[1fr_1.1fr]">
-                <div>
-                    <p class="text-xs uppercase tracking-[0.3em] text-blue-200">무료 체험 신청</p>
-                    <h3 class="text-2xl font-bold mt-2">1분만에 시작하는 Before Class 체험</h3>
-                    <p class="text-slate-200 mt-3 text-sm">
-                        학교/과목 정보만 입력하면 체험 계정 안내를 바로 받아볼 수 있습니다.
-                    </p>
-                </div>
-                <form id="trialForm" class="bg-white text-slate-900 rounded-2xl p-5 space-y-4">
-                    <div>
-                        <label for="teacherName" class="text-xs font-semibold text-slate-500">이름</label>
-                        <input id="teacherName" name="teacherName" required class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" placeholder="홍길동">
-                    </div>
-                    <div>
-                        <label for="schoolName" class="text-xs font-semibold text-slate-500">학교</label>
-                        <input id="schoolName" name="schoolName" required class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" placeholder="OO중학교">
-                    </div>
-                    <div>
-                        <label for="email" class="text-xs font-semibold text-slate-500">이메일</label>
-                        <input id="email" name="email" type="email" required class="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" placeholder="teacher@example.com">
-                    </div>
-                    <button type="submit" class="w-full bg-blue-500 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-blue-400 transition">무료 체험 시작</button>
-                    <p id="trialMessage" class="hidden text-sm font-medium"></p>
-                </form>
-            </div>
-        </section>
-
-        <section class="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] items-center">
-            <div class="space-y-4">
-                <p class="text-xs uppercase tracking-[0.3em] text-blue-500">성과</p>
-                <h3 class="text-2xl font-bold">수업 준비 시간 대폭 절감 + 아이디어 품질 상승</h3>
-                <p class="text-slate-500">
-                    반복적인 문서 작성에서 벗어나, 학생 몰입을 높이는 활동 설계에 집중할 수 있습니다.
-                </p>
-                <ul class="space-y-3 text-sm text-slate-600">
-                    <li class="flex items-start gap-2">
-                        <span class="mt-1 h-2 w-2 rounded-full bg-blue-500"></span>
-                        수업안 초안 작성 시간을 평균 30분 단축
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <span class="mt-1 h-2 w-2 rounded-full bg-blue-500"></span>
-                        수준별 자료 제작을 자동화하여 수업 차별화 강화
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <span class="mt-1 h-2 w-2 rounded-full bg-blue-500"></span>
-                        에듀테크 연계 자료를 즉시 제공해 수업 몰입도 향상
-                    </li>
-                </ul>
-            </div>
-            <div class="bg-gradient-to-br from-blue-500/10 via-white to-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
-                <h4 class="font-semibold">오늘 생성되는 자료 패키지</h4>
-                <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                    <div class="bg-white rounded-2xl p-4 border border-slate-100">
-                        <p class="text-xs text-slate-400">수업안</p>
-                        <p class="font-semibold mt-1">도입–전개–정리 구조 자동 편성</p>
-                    </div>
-                    <div class="bg-white rounded-2xl p-4 border border-slate-100">
-                        <p class="text-xs text-slate-400">수준별 학습지</p>
-                        <p class="font-semibold mt-1">기초·보통·심화 3단계</p>
-                    </div>
-                    <div class="bg-white rounded-2xl p-4 border border-slate-100">
-                        <p class="text-xs text-slate-400">활동 아이디어</p>
-                        <p class="font-semibold mt-1">토의·프로젝트·게임형 활동</p>
-                    </div>
-                    <div class="bg-white rounded-2xl p-4 border border-slate-100">
-                        <p class="text-xs text-slate-400">에듀테크</p>
-                        <p class="font-semibold mt-1">퀴즈·시뮬레이션·워크시트</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer class="bg-slate-900 text-slate-200">
-        <div class="max-w-6xl mx-auto px-6 py-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h3 class="text-lg font-semibold">지금 바로 수업 준비를 간소화하세요.</h3>
-                <p class="text-sm text-slate-400 mt-2">수업 설계 파트너가 교사의 시간을 되돌려드립니다.</p>
-            </div>
-            <button class="bg-blue-500 px-5 py-3 rounded-xl text-sm font-semibold text-white hover:bg-blue-400 transition">상담 예약</button>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label for="grade" class="block text-sm font-semibold">학년(선택)</label>
+            <input id="grade" name="grade" placeholder="예: 중1" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-400" />
+          </div>
+          <div>
+            <label for="achievement" class="block text-sm font-semibold">성취기준(선택)</label>
+            <input id="achievement" name="achievement" placeholder="예: [9사(지리)01-01]" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-400" />
+          </div>
         </div>
-    </footer>
 
-    <script>
-        const trialForm = document.getElementById('trialForm');
-        const trialMessage = document.getElementById('trialMessage');
+        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-400 text-white font-semibold py-3 rounded-xl transition">자동 수업 설계 생성</button>
+      </form>
+    </section>
 
-        trialForm?.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const formData = new FormData(trialForm);
-            const teacherName = (formData.get('teacherName') || '').toString().trim();
+    <section id="result" class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+      <h2 class="text-xl font-bold">자동 생성 결과</h2>
+      <p id="resultGuide" class="text-sm text-slate-500 mt-1">아직 생성된 수업안이 없습니다. 왼쪽 폼을 입력해 주세요.</p>
 
-            trialMessage.classList.remove('hidden', 'text-red-600');
-            trialMessage.classList.add('text-emerald-600');
-            trialMessage.textContent = `${teacherName || '선생님'}님, 무료 체험 신청이 접수되었습니다. 안내 메일을 확인해주세요.`;
+      <div id="resultContent" class="hidden mt-6 space-y-6">
+        <div class="bg-slate-50 rounded-2xl p-4">
+          <p class="text-xs text-slate-500">수업 타이틀</p>
+          <h3 id="lessonTitle" class="font-bold mt-1"></h3>
+          <p id="lessonMeta" class="text-sm text-slate-600 mt-1"></p>
+        </div>
 
-            trialForm.reset();
-        });
-    </script>
+        <div class="grid gap-3">
+          <h4 class="font-semibold">1) 차시 설계 (도입–전개–정리)</h4>
+          <div id="phasePlan" class="grid md:grid-cols-3 gap-3 text-sm"></div>
+        </div>
+
+        <div>
+          <h4 class="font-semibold">2) 수준별 자료</h4>
+          <ul id="levelMaterials" class="mt-2 space-y-2 text-sm"></ul>
+        </div>
+
+        <div>
+          <h4 class="font-semibold">3) 활동 아이디어 뱅크</h4>
+          <ul id="activityIdeas" class="mt-2 space-y-2 text-sm"></ul>
+        </div>
+
+        <div>
+          <h4 class="font-semibold">4) 에듀테크 연계</h4>
+          <ul id="edutechIdeas" class="mt-2 space-y-2 text-sm"></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const plannerForm = document.getElementById('plannerForm');
+    const resultGuide = document.getElementById('resultGuide');
+    const resultContent = document.getElementById('resultContent');
+    const lessonTitle = document.getElementById('lessonTitle');
+    const lessonMeta = document.getElementById('lessonMeta');
+    const phasePlan = document.getElementById('phasePlan');
+    const levelMaterials = document.getElementById('levelMaterials');
+    const activityIdeas = document.getElementById('activityIdeas');
+    const edutechIdeas = document.getElementById('edutechIdeas');
+
+    function renderCard(title, text) {
+      return `<div class="bg-slate-50 border border-slate-200 rounded-xl p-3"><p class="text-xs text-blue-600 font-semibold">${title}</p><p class="mt-1 text-slate-700">${text}</p></div>`;
+    }
+
+    function renderList(items) {
+      return items
+        .map((item) => `<li class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">${item}</li>`)
+        .join('');
+    }
+
+    plannerForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const formData = new FormData(plannerForm);
+
+      const subject = String(formData.get('subject') || '').trim();
+      const topic = String(formData.get('lessonTopic') || '').trim();
+      const grade = String(formData.get('grade') || '').trim();
+      const achievement = String(formData.get('achievement') || '').trim();
+
+      const gradeText = grade ? `${grade} ` : '';
+      lessonTitle.textContent = `[${subject}] ${topic}`;
+      lessonMeta.textContent = `${gradeText}${achievement ? `| 성취기준: ${achievement}` : '| 성취기준: 입력 기반 자동 해석'}`;
+
+      phasePlan.innerHTML = [
+        renderCard('도입', `${topic}와 관련된 일상 사례/이미지 퀴즈 3문항으로 학습 동기를 유발하고 학습 목표를 공유합니다.`),
+        renderCard('전개', `${subject} 핵심 개념을 설명한 뒤, 짝/모둠 활동으로 ${topic} 비교·분석 과제를 수행합니다.`),
+        renderCard('정리', `출구 티켓(한 줄 정리 + 자기평가)으로 이해도를 확인하고 다음 차시와 연결합니다.`)
+      ].join('');
+
+      levelMaterials.innerHTML = renderList([
+        `<b>기초</b>: 핵심 용어 카드 + 빈칸 채우기 학습지 (${topic} 기본 개념 중심)`,
+        `<b>보통</b>: 자료 해석 문제 + 서술형 2문항 (핵심 개념 적용)`,
+        `<b>심화</b>: 실제 사례 확장 탐구 및 주장-근거 글쓰기 (비판적 사고 강화)`
+      ]);
+
+      activityIdeas.innerHTML = renderList([
+        `토의 질문: "${topic}가 우리 생활에 미치는 가장 큰 영향은 무엇인가?"`,
+        `프로젝트 주제: "우리 지역 사례로 보는 ${topic}" 인포그래픽 제작`,
+        `게임형 활동: 개념 카드 매칭 레이스 + 미션 퀴즈 챌린지`
+      ]);
+
+      edutechIdeas.innerHTML = renderList([
+        `퀴즈: 핵심 개념 자동 퀴즈(객관식 5 + 단답형 2)`,
+        `시뮬레이션: 변수 변경형 미니 시뮬레이션으로 ${topic} 결과 비교`,
+        `디지털 워크시트: 자동 채점 + 피드백 문장 추천 기능 포함`
+      ]);
+
+      resultGuide.classList.add('hidden');
+      resultContent.classList.remove('hidden');
+      document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  </script>
 </body>
 </html>
