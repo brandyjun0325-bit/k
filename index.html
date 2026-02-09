@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>학생 과제 관리 시스템 - 폴더 편집 버전</title>
+    <title>수업 설계 파트너 - Before Class</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
@@ -11,486 +11,187 @@
             font-family: 'Pretendard', sans-serif;
             background-color: #f8fafc;
         }
-        .status-submitted { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .status-pending { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
-        .status-missing { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-        
-        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-
-        .sticky-col { position: sticky; left: 0; z-index: 20; background-color: white; border-right: 2px solid #e2e8f0; }
-        
-        .sidebar-transition { transition: all 0.3s ease; }
-        .folder-item.active { background-color: #1e293b; color: white; border-left: 4px solid #3b82f6; }
-        
-        .folder-actions { display: none; }
-        .folder-item:hover .folder-actions { display: flex; }
     </style>
 </head>
-<body class="flex min-h-screen text-slate-900">
-
-    <!-- 사이드바 -->
-    <aside class="w-64 bg-slate-900 text-slate-300 flex-shrink-0 hidden md:flex flex-col sidebar-transition">
-        <div class="p-6 border-b border-slate-800">
-            <h1 class="text-xl font-bold text-white flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                과제 매니저
-            </h1>
-        </div>
-        
-        <nav class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
-            <!-- 폴더 리스트 영역 -->
-            <div>
-                <div class="flex justify-between items-center px-4 mb-2">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">과제 폴더</p>
-                    <button onclick="openFolderModal()" title="새 폴더 추가" class="text-blue-400 hover:text-blue-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    </button>
+<body class="text-slate-900">
+    <header class="bg-slate-900 text-white">
+        <div class="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-blue-500/20 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v12"></path><path d="M6 12h12"></path><path d="M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"></path></svg>
                 </div>
-                <div id="folderList" class="space-y-1">
-                    <!-- Dynamic Folder List -->
-                </div>
-            </div>
-        </nav>
-
-        <!-- 사이드바 하단 설정 영역 -->
-        <div class="p-4 border-t border-slate-800 space-y-2">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 mb-1">시스템 설정</p>
-            <button onclick="toggleStudentModal(true)" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 hover:text-white transition-all text-sm font-medium">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-                학생 명단 관리
-            </button>
-            <div class="bg-slate-800/50 p-4 rounded-xl mt-2">
-                <p class="text-[10px] text-slate-500">Status Tip</p>
-                <div class="flex items-center gap-2 mt-2 text-[10px]">
-                    <span class="w-2 h-2 rounded-full bg-green-500"></span> 제출
-                    <span class="w-2 h-2 rounded-full bg-red-500 ml-1"></span> 누락
-                    <span class="w-2 h-2 rounded-full bg-slate-500 ml-1"></span> 대기
-                </div>
-            </div>
-        </div>
-    </aside>
-
-    <!-- 메인 컨텐츠 -->
-    <main class="flex-1 h-screen overflow-y-auto custom-scrollbar">
-        <!-- 모바일 헤더 -->
-        <header class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center">
-            <h1 class="font-bold">과제 매니저</h1>
-            <div class="flex gap-2">
-                <button onclick="toggleStudentModal(true)" class="p-2 bg-slate-800 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-                </button>
-                <button onclick="openFolderModal()" class="p-2 bg-slate-800 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                </button>
-            </div>
-        </header>
-
-        <div class="p-4 md:p-8 max-w-6xl mx-auto">
-            <div class="mb-8 flex flex-col md:flex-row md:justify-between md:items-end gap-4">
                 <div>
-                    <h2 id="currentFolderNameDisplay" class="text-2xl font-bold text-slate-800">모든 폴더</h2>
-                    <p class="text-slate-500">선택된 폴더 내의 과제 현황을 관리합니다.</p>
-                </div>
-                <div class="flex gap-2">
-                     <button onclick="openAssignmentModal()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 shadow-lg shadow-blue-500/20 flex items-center gap-2 transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        현재 폴더에 과제 추가
-                    </button>
+                    <p class="text-xs text-blue-200">Before Class</p>
+                    <h1 class="text-lg font-bold">수업 설계 파트너</h1>
                 </div>
             </div>
-
-            <!-- 메트릭스 섹션 -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
-                <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                    <h3 class="font-bold text-slate-800 text-sm">과제 이행 매트릭스</h3>
+            <button class="hidden sm:inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full text-sm font-semibold hover:bg-white/20 transition">
+                무료 체험 시작
+            </button>
+        </div>
+        <div class="max-w-6xl mx-auto px-6 pb-12 pt-6 grid gap-8 lg:grid-cols-[1.2fr_0.8fr] items-center">
+            <div>
+                <p class="text-sm uppercase tracking-[0.4em] text-blue-200">수업 준비의 새로운 기준</p>
+                <h2 class="text-3xl sm:text-4xl font-bold mt-3 leading-tight">
+                    성취기준 입력 한 번으로 <br class="hidden sm:block">도입–전개–정리 수업안이 완성됩니다.
+                </h2>
+                <p class="text-slate-200 mt-4 max-w-xl">
+                    수업 설계 파트너는 차시 설계, 수준별 자료, 활동 아이디어, 에듀테크 연계를 자동화해
+                    교사의 수업 준비 시간을 획기적으로 줄입니다.
+                </p>
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <button class="bg-blue-500 px-5 py-3 rounded-xl text-sm font-semibold shadow-lg shadow-blue-500/30 hover:bg-blue-400 transition">데모 보기</button>
+                    <button class="border border-white/30 px-5 py-3 rounded-xl text-sm font-semibold hover:bg-white/10 transition">기능 살펴보기</button>
                 </div>
-                <div class="overflow-x-auto custom-scrollbar">
-                    <table class="w-full border-collapse">
-                        <thead>
-                            <tr id="matrixHeader" class="bg-slate-50/50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
-                                <!-- Dynamic -->
-                            </tr>
-                        </thead>
-                        <tbody id="matrixBody">
-                            <!-- Dynamic -->
-                        </tbody>
-                    </table>
+                <div class="mt-6 flex flex-wrap gap-6 text-sm text-slate-200">
+                    <div>
+                        <p class="text-2xl font-bold text-white">70%</p>
+                        <p class="text-xs uppercase tracking-widest">준비 시간 절감</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-white">3단계</p>
+                        <p class="text-xs uppercase tracking-widest">수준별 자료 자동 분화</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-white">4in1</p>
+                        <p class="text-xs uppercase tracking-widest">아이디어 묶음 제공</p>
+                    </div>
                 </div>
             </div>
-
-            <!-- 하단 상세 섹션 -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                        <h3 id="detailTitle" class="font-bold text-slate-800 text-sm">과제 상세 내역</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-white border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase">
-                                    <th class="px-6 py-4">성명</th>
-                                    <th class="px-6 py-4">상태</th>
-                                    <th class="px-6 py-4">점수</th>
-                                    <th class="px-6 py-4">피드백</th>
-                                </tr>
-                            </thead>
-                            <tbody id="detailTableBody">
-                                <!-- Dynamic -->
-                            </tbody>
-                        </table>
+            <div class="bg-white/10 border border-white/10 rounded-3xl p-6 shadow-xl">
+                <div class="bg-white/10 rounded-2xl p-4">
+                    <p class="text-xs text-blue-200">오늘의 자동 생성 결과</p>
+                    <h3 class="text-lg font-semibold mt-2">[사회] 도시와 농촌 비교</h3>
+                    <div class="mt-4 space-y-3 text-sm">
+                        <div class="bg-slate-900/60 rounded-xl p-3">
+                            <p class="text-xs text-blue-200">도입</p>
+                            <p>사진 비교 퀴즈로 학습 목표 공유</p>
+                        </div>
+                        <div class="bg-slate-900/60 rounded-xl p-3">
+                            <p class="text-xs text-blue-200">전개</p>
+                            <p>모둠별 그래프 해석 + 토의 질문 제공</p>
+                        </div>
+                        <div class="bg-slate-900/60 rounded-xl p-3">
+                            <p class="text-xs text-blue-200">정리</p>
+                            <p>디지털 워크시트 자동 채점 요약</p>
+                        </div>
                     </div>
                 </div>
-
-                <!-- 분석 요약 -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">과제 선택 분석</h4>
-                    <select id="assignmentSelector" onchange="selectAssignment(this.value)" class="w-full p-2 mb-4 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500">
-                        <!-- Dynamic -->
-                    </select>
-                    
-                    <div class="flex items-end gap-2 mb-2">
-                        <span id="statRate" class="text-4xl font-bold text-blue-600">0%</span>
-                        <span id="statCount" class="text-slate-400 text-sm mb-1">(0/0명)</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-6">
-                        <div id="statProgressBar" class="bg-blue-600 h-full transition-all duration-500" style="width: 0%"></div>
-                    </div>
-
-                    <h5 class="text-xs font-bold text-red-500 uppercase tracking-widest mb-2">미제출 명단</h5>
-                    <div id="missingList" class="flex flex-wrap gap-2 text-[11px]">
-                        <!-- Dynamic -->
-                    </div>
-                </div>
+                <div class="mt-4 text-xs text-slate-200">* 교과·학년·성취기준 기반으로 즉시 생성</div>
             </div>
         </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-16 space-y-16">
+        <section class="grid gap-8 lg:grid-cols-2">
+            <div>
+                <p class="text-xs uppercase tracking-[0.3em] text-blue-500">핵심 기능</p>
+                <h3 class="text-2xl font-bold mt-2">수업 설계를 자동화하는 4가지 엔진</h3>
+                <p class="text-slate-500 mt-3">
+                    반복 업무는 자동화하고, 교사는 학생 상호작용에 집중할 수 있도록 설계했습니다.
+                </p>
+            </div>
+            <div class="grid gap-4">
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                    <h4 class="font-semibold">차시 설계 자동화</h4>
+                    <p class="text-sm text-slate-500 mt-2">성취기준 입력 시 도입–전개–정리 구조로 수업안 초안을 생성합니다.</p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                    <h4 class="font-semibold">수준별 자료 생성</h4>
+                    <p class="text-sm text-slate-500 mt-2">동일 주제를 기초·보통·심화 버전으로 자동 분화하여 맞춤형 제공.</p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                    <h4 class="font-semibold">활동 아이디어 뱅크</h4>
+                    <p class="text-sm text-slate-500 mt-2">토의 질문, 프로젝트 주제, 게임형 활동을 한 번에 제안합니다.</p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                    <h4 class="font-semibold">에듀테크 연계</h4>
+                    <p class="text-sm text-slate-500 mt-2">퀴즈, 시뮬레이션, 디지털 워크시트까지 자동 생성합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div>
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">작동 방식</p>
+                    <h3 class="text-2xl font-bold mt-2">3단계로 끝나는 수업 준비</h3>
+                </div>
+                <button class="bg-slate-900 text-white px-4 py-2 rounded-full text-sm font-semibold">워크플로우 보기</button>
+            </div>
+            <div class="mt-8 grid gap-6 md:grid-cols-3">
+                <div class="bg-slate-50 rounded-2xl p-5">
+                    <p class="text-xs text-blue-600 font-semibold">Step 1</p>
+                    <h4 class="font-semibold mt-2">성취기준 입력</h4>
+                    <p class="text-sm text-slate-500 mt-2">교과, 학년, 핵심 키워드를 입력하면 즉시 분석합니다.</p>
+                </div>
+                <div class="bg-slate-50 rounded-2xl p-5">
+                    <p class="text-xs text-blue-600 font-semibold">Step 2</p>
+                    <h4 class="font-semibold mt-2">자동 설계</h4>
+                    <p class="text-sm text-slate-500 mt-2">수업안, 활동, 평가, 에듀테크 자료를 동시에 생성합니다.</p>
+                </div>
+                <div class="bg-slate-50 rounded-2xl p-5">
+                    <p class="text-xs text-blue-600 font-semibold">Step 3</p>
+                    <h4 class="font-semibold mt-2">개별화 조정</h4>
+                    <p class="text-sm text-slate-500 mt-2">학생 수준에 맞게 난이도와 자료를 맞춤 편집합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] items-center">
+            <div class="space-y-4">
+                <p class="text-xs uppercase tracking-[0.3em] text-blue-500">성과</p>
+                <h3 class="text-2xl font-bold">수업 준비 시간 대폭 절감 + 아이디어 품질 상승</h3>
+                <p class="text-slate-500">
+                    반복적인 문서 작성에서 벗어나, 학생 몰입을 높이는 활동 설계에 집중할 수 있습니다.
+                </p>
+                <ul class="space-y-3 text-sm text-slate-600">
+                    <li class="flex items-start gap-2">
+                        <span class="mt-1 h-2 w-2 rounded-full bg-blue-500"></span>
+                        수업안 초안 작성 시간을 평균 30분 단축
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="mt-1 h-2 w-2 rounded-full bg-blue-500"></span>
+                        수준별 자료 제작을 자동화하여 수업 차별화 강화
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="mt-1 h-2 w-2 rounded-full bg-blue-500"></span>
+                        에듀테크 연계 자료를 즉시 제공해 수업 몰입도 향상
+                    </li>
+                </ul>
+            </div>
+            <div class="bg-gradient-to-br from-blue-500/10 via-white to-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm">
+                <h4 class="font-semibold">오늘 생성되는 자료 패키지</h4>
+                <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div class="bg-white rounded-2xl p-4 border border-slate-100">
+                        <p class="text-xs text-slate-400">수업안</p>
+                        <p class="font-semibold mt-1">도입–전개–정리 구조 자동 편성</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 border border-slate-100">
+                        <p class="text-xs text-slate-400">수준별 학습지</p>
+                        <p class="font-semibold mt-1">기초·보통·심화 3단계</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 border border-slate-100">
+                        <p class="text-xs text-slate-400">활동 아이디어</p>
+                        <p class="font-semibold mt-1">토의·프로젝트·게임형 활동</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 border border-slate-100">
+                        <p class="text-xs text-slate-400">에듀테크</p>
+                        <p class="font-semibold mt-1">퀴즈·시뮬레이션·워크시트</p>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
-    <!-- 모달: 학생 관리 -->
-    <div id="studentModal" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 font-bold">학생 명단 관리</div>
-            <div class="p-6 space-y-4">
-                <textarea id="studentInputArea" rows="8" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="줄바꿈으로 이름 구분"></textarea>
-                <div class="flex gap-3">
-                    <button onclick="toggleStudentModal(false)" class="flex-1 py-3 border rounded-xl text-sm font-bold">취소</button>
-                    <button onclick="saveStudents()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold">저장</button>
-                </div>
+    <footer class="bg-slate-900 text-slate-200">
+        <div class="max-w-6xl mx-auto px-6 py-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h3 class="text-lg font-semibold">지금 바로 수업 준비를 간소화하세요.</h3>
+                <p class="text-sm text-slate-400 mt-2">수업 설계 파트너가 교사의 시간을 되돌려드립니다.</p>
             </div>
+            <button class="bg-blue-500 px-5 py-3 rounded-xl text-sm font-semibold text-white hover:bg-blue-400 transition">상담 예약</button>
         </div>
-    </div>
-
-    <!-- 모달: 폴더 추가 -->
-    <div id="folderModal" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 font-bold">새 폴더 생성</div>
-            <div class="p-6 space-y-4">
-                <input type="text" id="newFolderTitle" class="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="폴더 이름 (예: 1학기 수학)">
-                <div class="flex gap-3">
-                    <button onclick="closeFolderModal()" class="flex-1 py-3 border rounded-xl text-sm font-bold">취소</button>
-                    <button onclick="addFolder()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold">생성</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 모달: 과제 추가 -->
-    <div id="assignmentModal" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 font-bold">새 과제 추가</div>
-            <div class="p-6 space-y-4">
-                <p class="text-xs text-slate-500">선택된 폴더: <span id="targetFolderName" class="font-bold text-blue-600">폴더명</span></p>
-                <input type="text" id="newAssignmentTitle" class="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="과제 제목">
-                <div class="flex gap-3">
-                    <button onclick="closeAssignmentModal()" class="flex-1 py-3 border rounded-xl text-sm font-bold">취소</button>
-                    <button onclick="addAssignment()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold">과제 생성</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // --- 데이터 구조 ---
-        let students = ["김민수", "이서연", "박준영", "최지아", "정윤호"];
-        let folders = [
-            { id: 101, title: "1학기 과제" },
-            { id: 102, title: "프로젝트" }
-        ];
-        let assignments = [
-            { id: 1, folderId: 101, title: "수학 익힘책 10p", data: {} },
-            { id: 2, folderId: 101, title: "단어 테스트", data: {} },
-            { id: 3, folderId: 102, title: "최종 결과물 제출", data: {} }
-        ];
-        
-        let currentFolderId = 101; 
-        let currentAssignmentId = null; 
-        let editingFolderId = null; // 현재 편집 중인 폴더 ID
-
-        // --- 초기화 ---
-        function init() {
-            renderFolders();
-            refreshView();
-        }
-
-        // --- 뷰 갱신 ---
-        function refreshView() {
-            const currentFolder = folders.find(f => f.id === currentFolderId);
-            document.getElementById('currentFolderNameDisplay').innerText = currentFolder ? currentFolder.title : "선택된 폴더 없음";
-            
-            const filteredAssignments = assignments.filter(a => a.folderId === currentFolderId);
-            
-            if (filteredAssignments.length > 0) {
-                if (!currentAssignmentId || !filteredAssignments.find(a => a.id === currentAssignmentId)) {
-                    currentAssignmentId = filteredAssignments[0].id;
-                }
-            } else {
-                currentAssignmentId = null;
-            }
-
-            renderMatrix(filteredAssignments);
-            renderSelectors(filteredAssignments);
-            updateAnalysis();
-            renderDetailTable();
-        }
-
-        // --- 렌더링 함수들 ---
-        function renderFolders() {
-            const list = document.getElementById('folderList');
-            list.innerHTML = folders.map(f => {
-                const isActive = f.id === currentFolderId;
-                const isEditing = f.id === editingFolderId;
-                
-                if (isEditing) {
-                    return `
-                        <div class="px-2 py-1">
-                            <input id="editInput_${f.id}" type="text" value="${f.title}" class="w-full bg-slate-800 text-white text-sm px-3 py-2 rounded-lg outline-none ring-2 ring-blue-500" onkeydown="if(event.key==='Enter') saveFolderName(${f.id})">
-                            <div class="flex gap-1 mt-1 justify-end">
-                                <button onclick="setEditingFolder(null)" class="p-1 text-[10px] text-slate-500 hover:text-white">취소</button>
-                                <button onclick="saveFolderName(${f.id})" class="p-1 text-[10px] text-blue-400 hover:text-blue-300">저장</button>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                return `
-                    <div class="folder-item group relative w-full flex items-center rounded-xl transition-all text-sm font-medium ${isActive ? 'active' : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'}">
-                        <button onclick="selectFolder(${f.id})" class="flex-1 flex items-center gap-2 px-4 py-2.5 text-left">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                            <span class="truncate">${f.title}</span>
-                        </button>
-                        <div class="folder-actions absolute right-2 flex items-center gap-1 bg-slate-900 px-1 py-0.5 rounded shadow-sm">
-                            <button onclick="setEditingFolder(${f.id})" class="p-1 text-slate-500 hover:text-blue-400 transition-colors" title="이름 수정">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            </button>
-                            <button onclick="deleteFolder(${f.id})" class="p-1 text-slate-500 hover:text-red-400 transition-colors" title="폴더 삭제">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // --- 폴더 관리 로직 ---
-        function setEditingFolder(id) {
-            editingFolderId = id;
-            renderFolders();
-            if(id) setTimeout(() => document.getElementById(`editInput_${id}`).focus(), 50);
-        }
-
-        function saveFolderName(id) {
-            const input = document.getElementById(`editInput_${id}`);
-            const newTitle = input.value.trim();
-            if (newTitle) {
-                const folder = folders.find(f => f.id === id);
-                if (folder) folder.title = newTitle;
-            }
-            editingFolderId = null;
-            renderFolders();
-            refreshView();
-        }
-
-        function deleteFolder(id) {
-            if (!confirm("이 폴더와 포함된 모든 과제 데이터가 삭제됩니다. 계속하시겠습니까?")) return;
-            
-            folders = folders.filter(f => f.id !== id);
-            assignments = assignments.filter(a => a.folderId !== id);
-            
-            if (currentFolderId === id) {
-                currentFolderId = folders.length > 0 ? folders[0].id : null;
-            }
-            
-            renderFolders();
-            refreshView();
-        }
-
-        // --- 기존 매트릭스/상세 테이블 렌더링 (동일) ---
-        function renderMatrix(filtered) {
-            const header = document.getElementById('matrixHeader');
-            const body = document.getElementById('matrixBody');
-            
-            let headerHTML = `<th class="px-6 py-3 text-left sticky-col bg-slate-50 min-w-[100px]">학생 명단</th>`;
-            filtered.forEach(a => {
-                headerHTML += `<th class="px-3 py-3 text-center min-w-[90px] border-l border-slate-100">${a.title}</th>`;
-            });
-            header.innerHTML = headerHTML;
-
-            body.innerHTML = '';
-            students.forEach(student => {
-                const tr = document.createElement('tr');
-                tr.className = "border-b border-slate-50 hover:bg-slate-50/50";
-                
-                let cellsHTML = `<td class="px-6 py-3 font-bold text-xs text-slate-700 sticky-col bg-white">${student}</td>`;
-                filtered.forEach(a => {
-                    const status = a.data[student]?.status || 'pending';
-                    const colorClass = status === 'submitted' ? 'status-submitted' : (status === 'missing' ? 'status-missing' : 'status-pending');
-                    const icon = status === 'submitted' ? '✓' : (status === 'missing' ? '✕' : '-');
-                    cellsHTML += `
-                        <td class="p-1 border-l border-slate-50">
-                            <div onclick="cycleStatus('${student}', ${a.id})" class="h-8 flex items-center justify-center rounded-lg text-[10px] font-bold cursor-pointer transition-all active:scale-90 ${colorClass}">
-                                ${icon}
-                            </div>
-                        </td>`;
-                });
-                tr.innerHTML = cellsHTML;
-                body.appendChild(tr);
-            });
-        }
-
-        function renderSelectors(filtered) {
-            const selector = document.getElementById('assignmentSelector');
-            if (filtered.length === 0) {
-                selector.innerHTML = '<option>과제 없음</option>';
-                return;
-            }
-            selector.innerHTML = filtered.map(a => `<option value="${a.id}" ${a.id === currentAssignmentId ? 'selected' : ''}>${a.title}</option>`).join('');
-        }
-
-        function renderDetailTable() {
-            const body = document.getElementById('detailTableBody');
-            const a = assignments.find(x => x.id === currentAssignmentId);
-            body.innerHTML = '';
-            
-            if (!a) {
-                body.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-400 text-sm">표시할 과제가 없습니다.</td></tr>';
-                return;
-            }
-
-            students.forEach(student => {
-                const d = a.data[student] || { status: 'pending', score: 0, feedback: '' };
-                const tr = document.createElement('tr');
-                tr.className = "border-b border-slate-50 text-xs";
-                tr.innerHTML = `
-                    <td class="px-6 py-3 font-bold text-slate-700">${student}</td>
-                    <td class="px-6 py-3">
-                        <select onchange="updateData('${student}', 'status', this.value)" class="text-[10px] font-bold px-2 py-1 rounded-lg outline-none ${d.status === 'submitted' ? 'bg-green-100 text-green-700' : (d.status === 'missing' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600')}">
-                            <option value="submitted" ${d.status === 'submitted' ? 'selected' : ''}>완료</option>
-                            <option value="pending" ${d.status === 'pending' ? 'selected' : ''}>대기</option>
-                            <option value="missing" ${d.status === 'missing' ? 'selected' : ''}>미제출</option>
-                        </select>
-                    </td>
-                    <td class="px-6 py-3">
-                        <input type="number" value="${d.score || 0}" onchange="updateData('${student}', 'score', this.value)" class="w-12 p-1 border rounded text-center outline-none">
-                    </td>
-                    <td class="px-6 py-3">
-                        <input type="text" value="${d.feedback || ''}" onchange="updateData('${student}', 'feedback', this.value)" placeholder="피드백" class="w-full bg-slate-50 px-2 py-1 rounded outline-none text-[10px]">
-                    </td>
-                `;
-                body.appendChild(tr);
-            });
-        }
-
-        function selectFolder(id) {
-            currentFolderId = id;
-            currentAssignmentId = null;
-            renderFolders();
-            refreshView();
-        }
-
-        function selectAssignment(id) {
-            currentAssignmentId = parseInt(id);
-            updateAnalysis();
-            renderDetailTable();
-            const a = assignments.find(x => x.id === currentAssignmentId);
-            if(a) document.getElementById('detailTitle').innerText = `[${a.title}] 상세 내역`;
-        }
-
-        function cycleStatus(student, aid) {
-            const a = assignments.find(x => x.id === aid);
-            if (!a.data[student]) a.data[student] = { status: 'pending', score: 0, feedback: '' };
-            const cur = a.data[student].status;
-            a.data[student].status = cur === 'pending' ? 'submitted' : (cur === 'submitted' ? 'missing' : 'pending');
-            refreshView();
-        }
-
-        function updateData(s, f, v) {
-            const a = assignments.find(x => x.id === currentAssignmentId);
-            if (!a.data[s]) a.data[s] = { status: 'pending', score: 0, feedback: '' };
-            a.data[s][f] = f === 'score' ? parseInt(v) : v;
-            if (f === 'status') refreshView();
-        }
-
-        function updateAnalysis() {
-            const a = assignments.find(x => x.id === currentAssignmentId);
-            if (!a) {
-                document.getElementById('statRate').innerText = '0%';
-                document.getElementById('statCount').innerText = '(0/0명)';
-                document.getElementById('statProgressBar').style.width = '0%';
-                document.getElementById('missingList').innerHTML = '';
-                return;
-            }
-            let sub = 0, mis = [];
-            students.forEach(s => {
-                const stat = a.data[s]?.status || 'pending';
-                if (stat === 'submitted') sub++;
-                if (stat === 'missing') mis.push(s);
-            });
-            const rate = students.length > 0 ? Math.round((sub / students.length) * 100) : 0;
-            document.getElementById('statRate').innerText = `${rate}%`;
-            document.getElementById('statCount').innerText = `(${sub}/${students.length}명)`;
-            document.getElementById('statProgressBar').style.width = `${rate}%`;
-            document.getElementById('missingList').innerHTML = mis.length > 0 
-                ? mis.map(s => `<span class="px-2 py-1 bg-red-50 text-red-600 border border-red-100 rounded">${s}</span>`).join('')
-                : '<span class="text-slate-400 italic">없음</span>';
-        }
-
-        // --- 모달 제어 ---
-        function toggleStudentModal(s) { document.getElementById('studentModal').classList.toggle('hidden', !s); if(s) document.getElementById('studentInputArea').value = students.join('\n'); }
-        function saveStudents() { students = document.getElementById('studentInputArea').value.split('\n').map(s => s.trim()).filter(s => s.length > 0); refreshView(); toggleStudentModal(false); }
-        
-        function openFolderModal() { document.getElementById('folderModal').classList.remove('hidden'); }
-        function closeFolderModal() { document.getElementById('folderModal').classList.add('hidden'); }
-        function addFolder() {
-            const t = document.getElementById('newFolderTitle').value.trim();
-            if (!t) return;
-            const id = Date.now();
-            folders.push({ id, title: t });
-            document.getElementById('newFolderTitle').value = '';
-            closeFolderModal();
-            selectFolder(id);
-        }
-
-        function openAssignmentModal() {
-            const folder = folders.find(f => f.id === currentFolderId);
-            if (!folder) return alert("폴더를 먼저 선택해주세요.");
-            document.getElementById('targetFolderName').innerText = folder.title;
-            document.getElementById('assignmentModal').classList.remove('hidden');
-        }
-        function closeAssignmentModal() { document.getElementById('assignmentModal').classList.add('hidden'); }
-        function addAssignment() {
-            const t = document.getElementById('newAssignmentTitle').value.trim();
-            if (!t) return;
-            const id = Date.now();
-            assignments.push({ id, folderId: currentFolderId, title: t, data: {} });
-            document.getElementById('newAssignmentTitle').value = '';
-            closeAssignmentModal();
-            currentAssignmentId = id;
-            renderFolders();
-            refreshView();
-        }
-
-        window.onload = init;
-    </script>
+    </footer>
 </body>
 </html>
