@@ -1,0 +1,25 @@
+name: Temporary HWPX Builder
+on:
+  push:
+    paths:
+      - 'temp/hwpx_job/original.hwpx'
+      - 'temp/hwpx_job/build_hwpx.py'
+      - '.github/workflows/hwpx-build-temp.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build revised HWPX
+        run: python temp/hwpx_job/build_hwpx.py
+      - name: Upload HWPX package
+        uses: actions/upload-artifact@v4
+        with:
+          name: hwpx-package
+          path: temp/hwpx_job/artifact_hwpx
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 1
